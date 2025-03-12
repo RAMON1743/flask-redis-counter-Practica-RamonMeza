@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-redis-counter
+  labels:
+    app: flask-redis-counter
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-redis-counter
+  template:
+    metadata:
+      labels:
+        app: flask-redis-counter
+    spec:
+      containers:
+      - name: flask-app
+        image: tuusuario/flask-redis-counter-RamonMeza-Practica:latest
+        ports:
+        - containerPort: 5000
