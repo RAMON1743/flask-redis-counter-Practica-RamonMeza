@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-from redis_client import get_redis_client
+from app.redis_client import get_redis_client
 
 app = Flask(__name__)
 redis_client = get_redis_client()
