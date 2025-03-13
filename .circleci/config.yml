@@ -7,9 +7,14 @@ jobs:
   build:
     docker:
       - image: cimg/python:3.9
-      - image: redis:alpine  # 📌 Agregar Redis como servicio
+      - image: redis:7  # 📌 Usar una versión estable de Redis
     steps:
       - checkout
+      - run:
+          name: Verificar si Redis está en ejecución
+          command: |
+            ps aux | grep redis
+            netstat -tln
       - run:
           name: Configurar Redis en Flask
           command: echo "export REDIS_HOST=redis" >> $BASH_ENV  # 📌 Agregar variable de entorno
@@ -17,7 +22,7 @@ jobs:
           name: Esperar a que Redis esté listo
           command: |
             for i in {1..10}; do
-              nc -z redis 6379 && echo "Redis está listo" && exit 0
+              redis-cli -h redis ping && echo "Redis está listo" && exit 0
               echo "Esperando a Redis..."
               sleep 2
             done
