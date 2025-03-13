@@ -16,8 +16,10 @@ jobs:
       - run:
           name: Verificar si Redis está en ejecución
           command: |
-            ps aux | grep redis
-            netstat -tln
+            sleep 5  # Dar tiempo a que Redis arranque
+            docker ps -a  # Verificar si Redis está corriendo en Docker
+            ps aux | grep redis  # Verificar si hay procesos de Redis
+            netstat -tln  # Verificar si Redis está escuchando en el puerto 6379
       - run:
           name: Configurar Redis en Flask
           command: echo "export REDIS_HOST=redis" >> $BASH_ENV  # 📌 Agregar variable de entorno
