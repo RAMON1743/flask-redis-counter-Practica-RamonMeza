@@ -19,8 +19,11 @@ jobs:
           name: Verificar si Redis está en ejecución
           command: |
             sleep 5  # Dar tiempo a que Redis arranque
+            echo "Verificando contenedores en ejecución:"
             docker ps -a  # Verificar si Redis está corriendo en Docker
+            echo "Verificando procesos de Redis:"
             ps aux | grep redis  # Verificar si hay procesos de Redis
+            echo "Verificando puertos abiertos en el sistema:"
             netstat -tln  # Verificar si Redis está escuchando en el puerto 6379
       - run:
           name: Configurar Redis en Flask
@@ -29,10 +32,7 @@ jobs:
           name: Esperar a que Redis esté listo
           command: |
             for i in {1..10}; do
-              if getent hosts redis; then
-                echo "Redis está disponible en la red"
-                exit 0
-              fi
+              redis-cli -h redis -p 6379 ping && echo "Redis está listo" && exit 0
               echo "Esperando a Redis..."
               sleep 2
             done
