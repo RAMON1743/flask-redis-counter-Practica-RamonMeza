@@ -101,7 +101,11 @@ jobs:
           command: |
             sudo apt update
             sudo apt install -y nodejs npm
-            npm install -g snyk
+            mkdir -p ~/.npm-global  # Crear un directorio local para npm
+            npm config set prefix '~/.npm-global'
+            export PATH="$HOME/.npm-global/bin:$PATH"
+            echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> $BASH_ENV
+            npm install snyk
       - run:
           name: Autenticar con Snyk
           command: snyk auth $SNYK_TOKEN
