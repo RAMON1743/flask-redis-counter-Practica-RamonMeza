@@ -7,8 +7,12 @@ jobs:
   build:
     docker:
       - image: cimg/python:3.9
+      - image: redis:alpine  # 📌 Agrega este servicio para que Redis esté disponible
     steps:
       - checkout
+      - run:
+          name: Esperar a que Redis esté listo
+          command: sleep 5  # 📌 Da tiempo a Redis para iniciar antes de ejecutar pruebas
       - run:
           name: Configurar PYTHONPATH
           command: echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> $BASH_ENV
