@@ -10,6 +10,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Configurar PYTHONPATH
+          command: echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> $BASH_ENV
+      - run:
           name: Instalar dependencias
           command: pip install --no-cache-dir -r requirements.txt
       - run:
