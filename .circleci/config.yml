@@ -10,6 +10,8 @@ jobs:
       - image: redis:7  # 📌 Usar una versión estable de Redis
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true  # 📌 Habilitar Docker en CircleCI
       - run:
           name: Instalar redis-tools para verificar Redis
           command: sudo apt-get update && sudo apt-get install -y redis-tools
