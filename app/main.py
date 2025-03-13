@@ -1,3 +1,5 @@
+"""Módulo principal de la aplicación Flask."""
+
 from flask import Flask, render_template, request, redirect, url_for
 from app.redis_client import get_redis_client
 
@@ -6,6 +8,7 @@ redis_client = get_redis_client()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    """Maneja las solicitudes GET y POST para la página principal."""
     if request.method == 'POST':
         redis_client.incr('counter')
         return redirect(url_for('index'))
@@ -14,4 +17,4 @@ def index():
     return render_template('index.html', counter=int(counter))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)  # No trailing whitespace
