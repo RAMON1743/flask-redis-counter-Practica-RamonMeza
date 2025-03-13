@@ -1,5 +1,5 @@
 Flask==2.1.2
-werkzeug==2.0.3  # 📌 Esta versión mantiene 'url_quote'
+werkzeug==3.0.6  # 📌 Esta versión mantiene 'url_quote'
 redis==4.3.4
 pytest==7.1.2
 pytest-cov==3.0.0
