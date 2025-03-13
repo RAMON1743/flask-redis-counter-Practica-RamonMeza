@@ -24,12 +24,15 @@ jobs:
             netstat -tln  # Verificar si Redis está escuchando en el puerto 6379
       - run:
           name: Configurar Redis en Flask
-          command: echo "export REDIS_HOST=redis" >> $BASH_ENV  # 📌 Agregar variable de entorno
+          command: echo "export REDIS_HOST=redis" >> $BASH_ENV && echo "export REDIS_PORT=6379" >> $BASH_ENV  # 📌 Agregar variables de entorno
       - run:
           name: Esperar a que Redis esté listo
           command: |
             for i in {1..10}; do
-              redis-cli -h redis ping && echo "Redis está listo" && exit 0
+              if getent hosts redis; then
+                echo "Redis está disponible en la red"
+                exit 0
+              fi
               echo "Esperando a Redis..."
               sleep 2
             done

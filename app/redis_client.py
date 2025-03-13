@@ -3,5 +3,6 @@ from redis import Redis
 
 def get_redis_client():
     """Retorna una instancia del cliente Redis."""
-    redis_host = os.getenv("REDIS_HOST", "redis")  # Se usa 'redis' como nombre del servicio en CircleCI
-    return Redis(host=redis_host, port=6379, db=0, decode_responses=True)
+    redis_host = os.getenv("REDIS_HOST", "redis")  # Se usa "redis" en entornos Docker/CircleCI
+    redis_port = int(os.getenv("REDIS_PORT", 6379))  # Asegurar que usa el puerto correcto
+    return Redis(host=redis_host, port=redis_port, db=0, decode_responses=True)
