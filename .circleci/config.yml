@@ -7,14 +7,15 @@ jobs:
   build:
     docker:
       - image: cimg/python:3.9
-      - image: redis:7  # 📌 Usar una versión estable de Redis
+      - image: redis:7
+        name: redis  # 📌 Asignar un alias para garantizar que Flask lo encuentre
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true  # 📌 Habilitar Docker en CircleCI
       - run:
           name: Instalar redis-tools para verificar Redis
-          command: sudo apt-get update && sudo apt-get install -y redis-tools
+          command: sudo apt-get update && sudo apt-get install -y redis-tools netcat
       - run:
           name: Verificar si Redis está en ejecución
           command: |
@@ -32,11 +33,17 @@ jobs:
           name: Esperar a que Redis esté listo
           command: |
             for i in {1..10}; do
-              redis-cli -h redis -p 6379 ping && echo "Redis está listo" && exit 0
+              nc -z redis 6379 && echo "Redis está listo" && exit 0
               echo "Esperando a Redis..."
-              sleep 2
+              sleep 3
             done
             echo "Redis no respondió a tiempo" && exit 1
+      - run:
+          name: Verificar conexión a Redis antes de ejecutar Flask
+          command: |
+            echo "Probando conexión con Redis..."
+            ping -c 3 redis || echo "No se pudo hacer ping a Redis"
+            nc -zv redis 6379 || echo "No se pudo conectar al puerto 6379"
       - run:
           name: Configurar PYTHONPATH
           command: echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> $BASH_ENV
