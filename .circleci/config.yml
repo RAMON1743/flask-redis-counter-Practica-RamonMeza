@@ -15,7 +15,13 @@ jobs:
           command: echo "export REDIS_HOST=redis" >> $BASH_ENV  # 📌 Agregar variable de entorno
       - run:
           name: Esperar a que Redis esté listo
-          command: sleep 5  # 📌 Da tiempo a Redis para iniciar antes de ejecutar pruebas
+          command: |
+            for i in {1..10}; do
+              nc -z redis 6379 && echo "Redis está listo" && exit 0
+              echo "Esperando a Redis..."
+              sleep 2
+            done
+            echo "Redis no respondió a tiempo" && exit 1
       - run:
           name: Configurar PYTHONPATH
           command: echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> $BASH_ENV
