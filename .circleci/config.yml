@@ -108,6 +108,9 @@ jobs:
             npm install -g snyk
             snyk --version  # Verificar que Snyk está instalado correctamente
       - run:
+          name: Instalar dependencias del proyecto antes de ejecutar Snyk
+          command: pip install --no-cache-dir -r requirements.txt
+      - run:
           name: Autenticar con Snyk
           command: snyk auth $SNYK_TOKEN
       - run:
