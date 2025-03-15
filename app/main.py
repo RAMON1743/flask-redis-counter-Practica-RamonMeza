@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for
+"""Módulo principal de la aplicación Flask para manejar un contador con Redis."""
+
+from flask import Flask, render_template, request
 from app.redis_client import get_redis_client
 
 app = Flask(__name__)
