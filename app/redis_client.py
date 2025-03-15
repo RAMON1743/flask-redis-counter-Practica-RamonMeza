@@ -3,10 +3,11 @@
 import os
 from redis import Redis
 
+
 def get_redis_client():
     """Retorna una instancia del cliente Redis."""
     redis_host = os.getenv("REDIS_HOST", "redis-server")
-    redis_port = os.getenv("REDIS_PORT", "6379")  # Convertir a int después
+    redis_port = os.getenv("REDIS_PORT", "6379")
 
     return Redis(
         host=redis_host,
