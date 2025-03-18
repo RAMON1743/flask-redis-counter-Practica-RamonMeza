@@ -15,7 +15,14 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Configurar Git para usar HTTPS con el token de GitHub
+      # Instalar Git y SSH manualmente si no están presentes
+      - run:
+          name: Instalar Git y SSH
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y git openssh-client
+
+      # Configurar Git para usar HTTPS con token de GitHub
       - run:
           name: Configurar Git para usar HTTPS con token de GitHub
           command: |
