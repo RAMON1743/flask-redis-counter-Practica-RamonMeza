@@ -6,7 +6,7 @@ metadata:
   labels:
     app: flask-redis-counter
 spec:
-  replicas: 2  # 📌 Número de pods a ejecutar
+  replicas: 2  
   selector:
     matchLabels:
       app: flask-redis-counter
