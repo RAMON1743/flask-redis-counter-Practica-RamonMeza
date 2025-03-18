@@ -1,7 +1,8 @@
-Flask==2.2.5  # 📌 Actualizado para corregir vulnerabilidad SNYK-PYTHON-FLASK-5490129
 werkzeug==3.0.6  # 📌 Versión segura, manteniendo compatibilidad con Flask
 redis==4.3.6  # 📌 Corrige vulnerabilidad SNYK-PYTHON-REDIS-5291195
 pytest==7.1.2
 pytest-cov==3.0.0
 flake8==4.0.1
-pylint==2.14.0
+pylint==2.15.0
+setuptools==70.0.0  # Corregir la sintaxis
+astroid==2.11.8  # Corregir la sintaxis
