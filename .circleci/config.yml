@@ -6,11 +6,14 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/python:3.9
-      - image: redis:7
-        name: redis
+      - image: cimg/python:3.9  # Imagen de Python
+      - image: redis:7  # Imagen de Redis
+        name: redis  # Nombre del contenedor de Redis
+    environment:
+      REDIS_HOST: "redis"  # Nombre del contenedor de Redis
+      REDIS_PORT: "6379"   # Puerto de Redis
     steps:
-      - checkout
+      - checkout  # Revisa el código fuente
       - setup_remote_docker:
           docker_layer_caching: true
 
@@ -45,7 +48,7 @@ jobs:
       # Guardar artefactos de tests
       - store_test_results:
           path: test-results
-      
+          
       # Guardar artefactos adicionales
       - store_artifacts:
           path: test-results

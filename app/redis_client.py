@@ -6,7 +6,7 @@ from redis import Redis
 
 def get_redis_client():
     """Retorna una instancia del cliente Redis."""
-    redis_host = os.getenv("REDIS_HOST", "redis-server")
+    redis_host = os.getenv("REDIS_HOST", "redis")
     redis_port = os.getenv("REDIS_PORT", "6379")
 
     return Redis(
