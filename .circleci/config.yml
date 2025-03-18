@@ -15,26 +15,38 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git si no está instalado
+      # Eliminar archivos __pycache__ y .pyc
       - run:
-          name: Instalar Git
+          name: Eliminar archivos __pycache__
+          command: |
+            find . -name "__pycache__" -exec rm -r {} \;
+            find . -name "*.pyc" -exec rm -f {} \;
+
+      # Instalar herramientas adicionales
+      - run:
+          name: Instalar Git y SSH
           command: |
             sudo apt-get update
-            sudo apt-get install -y git
+            sudo apt-get install -y git openssh-client
 
-      # Configurar Git para usar HTTPS con token de GitHub
+      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
       - run:
-          name: Configurar Git para HTTPS con token de GitHub
+          name: Crear .ssh correctamente
           command: |
-            git config --global user.email "ci-bot@example.com"
-            git config --global user.name "CircleCI Bot"
-            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
+            # Crear el directorio ~/.ssh con los permisos adecuados
+            mkdir -p /home/circleci/.ssh
+            chmod 700 /home/circleci/.ssh
 
-      # Clonar el repositorio usando HTTPS
-      - run:
-          name: Clonar repositorio de manifiestos
-          command: |
-            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git
+            # Colocar la clave privada SSH
+            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
+            chmod 600 /home/circleci/.ssh/id_rsa
+
+            # Agregar la clave conocida de GitHub
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
+            chmod 644 /home/circleci/.ssh/known_hosts
+
+            # Verificar si el directorio .ssh y la clave están bien configurados
+            ls -al /home/circleci/.ssh
 
       - setup_remote_docker:
           docker_layer_caching: true
@@ -53,7 +65,7 @@ jobs:
 
       - run:
           name: Ejecutar pruebas
-          command: pytest --cov=app --cov-report=xml --junitxml=test-results/results.xml
+          command: pytest --no-cache-dir --cov=app --cov-report=xml --junitxml=test-results/results.xml
 
       - run:
           name: Análisis estático de código con pylint
