@@ -15,7 +15,14 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git y SSH si no están instalados (usando apt-get para Debian)
+      # Limpiar archivos .pyc y __pycache__
+      - run:
+          name: Limpiar archivos .pyc y __pycache__
+          command: |
+            find . -type f -name "*.pyc" -exec rm -f {} \;
+            find . -type d -name "__pycache__" -exec rm -rf {} \;
+
+      # Instalar Git y SSH si no están instalados
       - run:
           name: Instalar herramientas adicionales
           command: |
