@@ -17,29 +17,26 @@ jobs:
 
       # Instalar Git y SSH si no están instalados
       - run:
-          name: Instalar Git y SSH
+          name: Instalar herramientas adicionales
           command: |
             sudo apt-get update
             sudo apt-get install -y git openssh-client
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
 
-      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
+      # Configurar Git para usar HTTPS con token de GitHub
       - run:
-          name: Crear .ssh correctamente
+          name: Configurar Git
           command: |
-            # Crear el directorio ~/.ssh con los permisos adecuados
-            mkdir -p /home/circleci/.ssh
-            chmod 700 /home/circleci/.ssh
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
+            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
 
-            # Colocar la clave privada SSH
-            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
-            chmod 600 /home/circleci/.ssh/id_rsa
-
-            # Agregar la clave conocida de GitHub
-            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
-            chmod 644 /home/circleci/.ssh/known_hosts
-
-            # Verificar si el directorio .ssh y la clave están bien configurados
-            ls -al /home/circleci/.ssh
+      # Clonar el repositorio usando HTTPS
+      - run:
+          name: Clonar repositorio de manifiestos
+          command: |
+            git clone https://github.com/IsaacAM50/calculadora-manifiestos-argo.git manifests
 
       - setup_remote_docker:
           docker_layer_caching: true
@@ -47,10 +44,6 @@ jobs:
       - run:
           name: Convertir DOCKERHUB_REPO a minúsculas
           command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
-
-      - run:
-          name: Configurar SECRET_KEY en entorno
-          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
 
       - run:
           name: Instalar dependencias
@@ -83,7 +76,7 @@ jobs:
 
   push_docker:
     docker:
-      - image: cimg/python:3.9  # Usar imagen de Python con Git y SSH preinstalados
+      - image: cimg/python:3.9
     steps:
       - checkout
       - setup_remote_docker:
@@ -124,7 +117,7 @@ jobs:
 
   vulnerability_scan:
     docker:
-      - image: cimg/python:3.9  # Usar imagen de Python con Git y SSH preinstalados
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
