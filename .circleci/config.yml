@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/python:3.9  # Imagen de Python base
+      - image: cimg/python:3.9  # Imagen base de Python
       - image: redis:7  # Imagen de Redis
         name: redis  # Nombre del contenedor de Redis
     environment:
@@ -15,21 +15,21 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git y SSH y configurar permisos para .ssh
+      # Instalar Git y SSH si no están instalados
       - run:
           name: Instalar Git y SSH
           command: |
             sudo apt-get update
             sudo apt-get install -y git openssh-client
 
-      # Configurar el directorio .ssh y la clave SSH de forma adecuada
+      # Crear el directorio .ssh correctamente en el home del usuario
       - run:
           name: Configurar .ssh y agregar clave SSH
           command: |
             mkdir -p ~/.ssh  # Crear el directorio .ssh en el home del usuario
-            chmod 700 ~/.ssh  # Asegurar permisos correctos para ~/.ssh
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Coloca la clave privada SSH
-            chmod 600 ~/.ssh/id_rsa  # Asegura permisos correctos para la clave privada
+            chmod 700 ~/.ssh  # Asegurar que solo el propietario tenga acceso
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Colocar la clave privada SSH
+            chmod 600 ~/.ssh/id_rsa  # Asegurar que la clave tenga permisos restrictivos
             ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts  # Agregar clave conocida de GitHub
 
       - setup_remote_docker:
