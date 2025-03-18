@@ -46,7 +46,7 @@ jobs:
       - run:
           name: Clonar repositorio desde GitHub
           command: |
-            git clone git@github.com:RAMON1743/flask-redis-counter-Practica-RamonMeza.git
+            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git
 
       # Continuar con otros pasos
       - setup_remote_docker:
