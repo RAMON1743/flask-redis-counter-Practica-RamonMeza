@@ -15,13 +15,6 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Eliminar archivos __pycache__ y .pyc
-      - run:
-          name: Eliminar archivos __pycache__
-          command: |
-            find . -name "__pycache__" -exec rm -r {} \;
-            find . -name "*.pyc" -exec rm -f {} \;
-
       # Instalar herramientas adicionales
       - run:
           name: Instalar Git y SSH
@@ -29,52 +22,34 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y git openssh-client
 
-      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
+      # Eliminar archivos __pycache__ y .pyc
       - run:
-          name: Crear .ssh correctamente
+          name: Eliminar archivos __pycache__
           command: |
-            # Crear el directorio ~/.ssh con los permisos adecuados
-            mkdir -p /home/circleci/.ssh
-            chmod 700 /home/circleci/.ssh
+            find . -name "__pycache__" -exec rm -r {} \;
+            find . -name "*.pyc" -exec rm -f {} \;
 
-            # Colocar la clave privada SSH
-            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
-            chmod 600 /home/circleci/.ssh/id_rsa
-
-            # Agregar la clave conocida de GitHub
-            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
-            chmod 644 /home/circleci/.ssh/known_hosts
-
-            # Verificar si el directorio .ssh y la clave están bien configurados
-            ls -al /home/circleci/.ssh
-
-      - setup_remote_docker:
-          docker_layer_caching: true
-
-      - run:
-          name: Convertir DOCKERHUB_REPO a minúsculas
-          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
-
-      - run:
-          name: Configurar SECRET_KEY en entorno
-          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
-
+      # Instalar dependencias
       - run:
           name: Instalar dependencias
           command: pip install --no-cache-dir -r requirements.txt
 
+      # Ejecutar pruebas sin el argumento --no-cache-dir
       - run:
           name: Ejecutar pruebas
-          command: pytest --no-cache-dir --cov=app --cov-report=xml --junitxml=test-results/results.xml
+          command: pytest --cov=app --cov-report=xml --junitxml=test-results/results.xml
 
+      # Análisis estático de código con pylint
       - run:
           name: Análisis estático de código con pylint
           command: pylint --disable=C0303 app
 
+      # Linting con flake8
       - run:
           name: Linting con flake8
           command: flake8 app
 
+      # Construir imagen Docker
       - run:
           name: Construir imagen Docker
           command: docker build -t $DOCKERHUB_REPO:latest .
