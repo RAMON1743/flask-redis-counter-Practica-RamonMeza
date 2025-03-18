@@ -15,28 +15,31 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git y SSH si no están instalados
+      # Configuración de la clave SSH para GitHub
       - run:
-          name: Instalar herramientas adicionales
+          name: Configurar clave SSH
           command: |
-            sudo apt-get update
-            sudo apt-get install -y git openssh-client
             mkdir -p ~/.ssh
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Colocar la clave privada SSH
+            chmod 600 ~/.ssh/id_rsa
             ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
+            chmod 644 ~/.ssh/known_hosts
+            # Verificar si la clave SSH está configurada correctamente
+            ssh -T git@github.com
 
-      # Configurar Git para usar HTTPS con token de GitHub
+      # Configurar Git para usar SSH en lugar de HTTPS
       - run:
-          name: Configurar Git
+          name: Configurar Git para usar SSH
           command: |
             git config --global user.email "ci-bot@example.com"
             git config --global user.name "CircleCI Bot"
-            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
+            git config --global url."git@github.com:".insteadOf "https://github.com/"
 
-      # Clonar el repositorio usando HTTPS
+      # Clonar el repositorio usando SSH
       - run:
           name: Clonar repositorio de manifiestos
           command: |
-            git clone https://github.com/IsaacAM50/calculadora-manifiestos-argo.git manifests
+            git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git manifests
 
       - setup_remote_docker:
           docker_layer_caching: true
