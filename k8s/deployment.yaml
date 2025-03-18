@@ -22,6 +22,6 @@ spec:
         - containerPort: 5000
         envFrom:
         - configMapRef:
-            name: flask-redis-config  # 📌 Cargar ConfigMap
+            name: flask-redis-config  
         - secretRef:
-            name: flask-redis-secret  # 📌 Cargar Secret
+            name: flask-redis-secret  
