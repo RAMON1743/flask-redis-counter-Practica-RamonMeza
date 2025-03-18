@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/python:3.9  # Imagen base de Python con Git y SSH
+      - image: cimg/python:3.9  # Imagen base de Python
       - image: redis:7  # Imagen de Redis
         name: redis  # Nombre del contenedor de Redis
     environment:
@@ -15,42 +15,37 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar herramientas necesarias si no están presentes
+      # Instalar Git si no está instalado
       - run:
-          name: Instalar Git y SSH
+          name: Instalar Git
           command: |
             sudo apt-get update
-            sudo apt-get install -y git openssh-client
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
+            sudo apt-get install -y git
 
-      # Configurar SSH para usar con GitHub
+      # Configurar Git para usar HTTPS con token de GitHub
       - run:
-          name: Configurar Git con SSH
-          command: |
-            # Asegurarse de que SSH_PRIVATE_KEY esté configurado
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa  # Establecer permisos adecuados
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            chmod 644 ~/.ssh/known_hosts
-
-      # Configurar Git para usar HTTPS con token de GitHub (si es necesario)
-      - run:
-          name: Configurar Git para usar HTTPS con token de GitHub
+          name: Configurar Git para HTTPS con token de GitHub
           command: |
             git config --global user.email "ci-bot@example.com"
             git config --global user.name "CircleCI Bot"
             git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
 
-      # Clonar el repositorio de manera segura (con SSH)
+      # Clonar el repositorio usando HTTPS
       - run:
-          name: Clonar repositorio desde GitHub
+          name: Clonar repositorio de manifiestos
           command: |
             git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git
 
-      # Continuar con otros pasos
       - setup_remote_docker:
           docker_layer_caching: true
+
+      - run:
+          name: Convertir DOCKERHUB_REPO a minúsculas
+          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
+
+      - run:
+          name: Configurar SECRET_KEY en entorno
+          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
 
       - run:
           name: Instalar dependencias
