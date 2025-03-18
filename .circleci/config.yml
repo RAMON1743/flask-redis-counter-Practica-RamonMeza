@@ -15,32 +15,14 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git y SSH si no están instalados
+      # Usar HTTPS con el token de GitHub para la autenticación
       - run:
-          name: Instalar Git y SSH
+          name: Configurar Git para usar HTTPS con token de GitHub
           command: |
-            sudo apt-get update
-            sudo apt-get install -y git openssh-client
-
-      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
-      - run:
-          name: Crear .ssh correctamente
-          command: |
-            # Crear el directorio ~/.ssh con los permisos adecuados
-            mkdir -p /home/circleci/.ssh
-            chmod 700 /home/circleci/.ssh
-
-            # Colocar la clave privada SSH
-            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
-            chmod 600 /home/circleci/.ssh/id_rsa
-
-            # Agregar la clave conocida de GitHub
-            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
-            chmod 644 /home/circleci/.ssh/known_hosts
-
-            # Verificar si el directorio .ssh y la clave están bien configurados
-            ls -al /home/circleci/.ssh
-
+            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
+            git config --global user.email "youremail@example.com"
+            git config --global user.name "Your Name"
+      
       - setup_remote_docker:
           docker_layer_caching: true
 
@@ -83,7 +65,7 @@ jobs:
 
   push_docker:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.9  # Imagen de Python
     steps:
       - checkout
       - setup_remote_docker:
