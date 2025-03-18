@@ -15,41 +15,58 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar herramientas adicionales
+      # Instalar Git y SSH si no están instalados
       - run:
-          name: Instalar Git y SSH
+          name: Instalar herramientas adicionales
           command: |
             sudo apt-get update
             sudo apt-get install -y git openssh-client
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
 
-      # Eliminar archivos __pycache__ y .pyc
+      # Configurar Git para usar HTTPS con token de GitHub
       - run:
-          name: Eliminar archivos __pycache__
+          name: Configurar Git
           command: |
-            find . -name "__pycache__" -exec rm -r {} \;
-            find . -name "*.pyc" -exec rm -f {} \;
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
+            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
 
-      # Instalar dependencias
+      # Clonar el repositorio usando HTTPS
+      - run:
+          name: Clonar repositorio de manifiestos
+          command: |
+            git clone https://github.com/IsaacAM50/calculadora-manifiestos-argo.git manifests
+
+      # Configuración de Docker para CircleCI
+      - setup_remote_docker:
+          version: 20.10.7  # Versión de Docker que quieres usar
+          docker_layer_caching: true  # Usar caché de capas Docker (opcional)
+
+      - run:
+          name: Convertir DOCKERHUB_REPO a minúsculas
+          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
+
+      - run:
+          name: Configurar SECRET_KEY en entorno
+          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
+
       - run:
           name: Instalar dependencias
           command: pip install --no-cache-dir -r requirements.txt
 
-      # Ejecutar pruebas sin el argumento --no-cache-dir
       - run:
           name: Ejecutar pruebas
           command: pytest --cov=app --cov-report=xml --junitxml=test-results/results.xml
 
-      # Análisis estático de código con pylint
       - run:
           name: Análisis estático de código con pylint
           command: pylint --disable=C0303 app
 
-      # Linting con flake8
       - run:
           name: Linting con flake8
           command: flake8 app
 
-      # Construir imagen Docker
       - run:
           name: Construir imagen Docker
           command: docker build -t $DOCKERHUB_REPO:latest .
