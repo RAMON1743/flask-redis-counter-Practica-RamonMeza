@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/python:3.9  # Imagen base de Python
+      - image: cimg/python:3.9  # Imagen base de Python con Git y SSH
       - image: redis:7  # Imagen de Redis
         name: redis  # Nombre del contenedor de Redis
     environment:
@@ -15,42 +15,42 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git y SSH si no están instalados
+      # Instalar herramientas necesarias si no están presentes
       - run:
           name: Instalar Git y SSH
           command: |
             sudo apt-get update
             sudo apt-get install -y git openssh-client
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
 
-      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
+      # Configurar SSH para usar con GitHub
       - run:
-          name: Crear .ssh correctamente
+          name: Configurar Git con SSH
           command: |
-            # Crear el directorio ~/.ssh con los permisos adecuados
-            mkdir -p /home/circleci/.ssh
-            chmod 700 /home/circleci/.ssh
+            # Asegurarse de que SSH_PRIVATE_KEY esté configurado
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa  # Establecer permisos adecuados
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            chmod 644 ~/.ssh/known_hosts
 
-            # Colocar la clave privada SSH
-            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
-            chmod 600 /home/circleci/.ssh/id_rsa
+      # Configurar Git para usar HTTPS con token de GitHub (si es necesario)
+      - run:
+          name: Configurar Git para usar HTTPS con token de GitHub
+          command: |
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
+            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
 
-            # Agregar la clave conocida de GitHub
-            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
-            chmod 644 /home/circleci/.ssh/known_hosts
+      # Clonar el repositorio de manera segura (con SSH)
+      - run:
+          name: Clonar repositorio desde GitHub
+          command: |
+            git clone git@github.com:RAMON1743/flask-redis-counter-Practica-RamonMeza.git
 
-            # Verificar si el directorio .ssh y la clave están bien configurados
-            ls -al /home/circleci/.ssh
-
+      # Continuar con otros pasos
       - setup_remote_docker:
           docker_layer_caching: true
-
-      - run:
-          name: Convertir DOCKERHUB_REPO a minúsculas
-          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
-
-      - run:
-          name: Configurar SECRET_KEY en entorno
-          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
 
       - run:
           name: Instalar dependencias
