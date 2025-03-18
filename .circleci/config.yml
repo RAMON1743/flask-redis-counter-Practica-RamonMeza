@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/python:3.9  # Imagen base de Python que ya incluye Git y SSH
+      - image: cimg/python:3.9  # Imagen base de Python
       - image: redis:7  # Imagen de Redis
         name: redis  # Nombre del contenedor de Redis
     environment:
@@ -15,34 +15,31 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar herramientas adicionales si no están presentes
+      # Instalar Git y SSH si no están instalados
       - run:
-          name: Instalar herramientas adicionales
+          name: Instalar Git y SSH
           command: |
             sudo apt-get update
             sudo apt-get install -y git openssh-client
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
 
-      # Configurar el archivo ssh config
+      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
       - run:
-          name: Configurar archivo SSH
+          name: Crear .ssh correctamente
           command: |
-            echo -e "Host github.com\n  User git\n  Hostname github.com\n  IdentityFile ~/.ssh/id_rsa\n  IdentitiesOnly yes" > ~/.ssh/config
-            chmod 600 ~/.ssh/config
+            # Crear el directorio ~/.ssh con los permisos adecuados
+            mkdir -p /home/circleci/.ssh
+            chmod 700 /home/circleci/.ssh
 
-      # Cargar la clave privada SSH desde la variable de entorno SSH_PRIVATE_KEY
-      - run:
-          name: Cargar clave privada SSH
-          command: |
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa
+            # Colocar la clave privada SSH
+            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
+            chmod 600 /home/circleci/.ssh/id_rsa
 
-      # Verificar que el archivo ssh config y la clave privada están bien configurados
-      - run:
-          name: Verificar conexión SSH a GitHub
-          command: |
-            ssh -T git@github.com
+            # Agregar la clave conocida de GitHub
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
+            chmod 644 /home/circleci/.ssh/known_hosts
+
+            # Verificar si el directorio .ssh y la clave están bien configurados
+            ls -al /home/circleci/.ssh
 
       - setup_remote_docker:
           docker_layer_caching: true
@@ -50,6 +47,10 @@ jobs:
       - run:
           name: Convertir DOCKERHUB_REPO a minúsculas
           command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
+
+      - run:
+          name: Configurar SECRET_KEY en entorno
+          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
 
       - run:
           name: Instalar dependencias
