@@ -22,15 +22,24 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y git openssh-client
 
-      # Crear el directorio .ssh correctamente en el home del usuario
+      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
       - run:
-          name: Configurar .ssh y agregar clave SSH
+          name: Crear .ssh correctamente
           command: |
-            mkdir -p ~/.ssh  # Crear el directorio .ssh en el home del usuario
-            chmod 700 ~/.ssh  # Asegurar que solo el propietario tenga acceso
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Colocar la clave privada SSH
-            chmod 600 ~/.ssh/id_rsa  # Asegurar que la clave tenga permisos restrictivos
-            ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts  # Agregar clave conocida de GitHub
+            # Crear el directorio ~/.ssh con los permisos adecuados
+            mkdir -p /home/circleci/.ssh
+            chmod 700 /home/circleci/.ssh
+
+            # Colocar la clave privada SSH
+            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
+            chmod 600 /home/circleci/.ssh/id_rsa
+
+            # Agregar la clave conocida de GitHub
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
+            chmod 644 /home/circleci/.ssh/known_hosts
+
+            # Verificar si el directorio .ssh y la clave están bien configurados
+            ls -al /home/circleci/.ssh
 
       - setup_remote_docker:
           docker_layer_caching: true
