@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/python:3.9  # Imagen base de Python
+      - image: circleci/python:3.9-alpine  # Imagen base de Python basada en Alpine
       - image: redis:7  # Imagen de Redis
         name: redis  # Nombre del contenedor de Redis
     environment:
@@ -15,14 +15,14 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git y SSH si no están instalados
+      # Instalar Git y OpenSSH si no están instalados (usando apk)
       - run:
-          name: Instalar herramientas adicionales
+          name: Instalar herramientas adicionales (Git y OpenSSH)
           command: |
-            sudo apt-get update
-            sudo apt-get install -y git openssh-client
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
+            apk update
+            apk upgrade
+            apk add --no-cache openssh
+            apk add git
 
       # Configurar Git para usar HTTPS con token de GitHub
       - run:
@@ -34,22 +34,11 @@ jobs:
 
       # Clonar el repositorio usando HTTPS
       - run:
-          name: Clonar repositorio de manifiestos
+          name: Clonar repositorio
           command: |
-            git clone https://github.com/IsaacAM50/calculadora-manifiestos-argo.git manifests
+            git clone https://github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git
 
-      # Configuración de Docker para CircleCI
-      - setup_remote_docker:
-          docker_layer_caching: true  # Usar caché de capas Docker (opcional)
-
-      - run:
-          name: Convertir DOCKERHUB_REPO a minúsculas
-          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
-
-      - run:
-          name: Configurar SECRET_KEY en entorno
-          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
-
+      # Instalación de dependencias y ejecución de pruebas
       - run:
           name: Instalar dependencias
           command: pip install --no-cache-dir -r requirements.txt
@@ -81,7 +70,7 @@ jobs:
 
   push_docker:
     docker:
-      - image: cimg/python:3.9
+      - image: circleci/python:3.9-alpine
     steps:
       - checkout
       - setup_remote_docker:
@@ -122,7 +111,7 @@ jobs:
 
   vulnerability_scan:
     docker:
-      - image: cimg/python:3.9
+      - image: circleci/python:3.9-alpine
     steps:
       - checkout
       - run:
