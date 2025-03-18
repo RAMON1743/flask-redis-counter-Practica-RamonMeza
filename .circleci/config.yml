@@ -15,39 +15,34 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Limpiar archivos .pyc y __pycache__
-      - run:
-          name: Limpiar archivos .pyc y __pycache__
-          command: |
-            find . -type f -name "*.pyc" -exec rm -f {} \;
-            find . -type d -name "__pycache__" -exec rm -rf {} \;
-
       # Instalar Git y SSH si no están instalados
       - run:
-          name: Instalar herramientas adicionales
+          name: Instalar Git y SSH
           command: |
             sudo apt-get update
             sudo apt-get install -y git openssh-client
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
 
-      # Configurar Git para usar HTTPS con token de GitHub
+      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
       - run:
-          name: Configurar Git
+          name: Crear .ssh correctamente
           command: |
-            git config --global user.email "ci-bot@example.com"
-            git config --global user.name "CircleCI Bot"
-            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
+            # Crear el directorio ~/.ssh con los permisos adecuados
+            mkdir -p /home/circleci/.ssh
+            chmod 700 /home/circleci/.ssh
 
-      # Clonar el repositorio usando HTTPS
-      - run:
-          name: Clonar repositorio de manifiestos
-          command: |
-            git clone https://github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git
+            # Colocar la clave privada SSH
+            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
+            chmod 600 /home/circleci/.ssh/id_rsa
 
-      # Configuración de Docker para CircleCI
+            # Agregar la clave conocida de GitHub
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
+            chmod 644 /home/circleci/.ssh/known_hosts
+
+            # Verificar si el directorio .ssh y la clave están bien configurados
+            ls -al /home/circleci/.ssh
+
       - setup_remote_docker:
-          docker_layer_caching: true  # Usar caché de capas Docker (opcional)
+          docker_layer_caching: true
 
       - run:
           name: Convertir DOCKERHUB_REPO a minúsculas
