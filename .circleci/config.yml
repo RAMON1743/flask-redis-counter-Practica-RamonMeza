@@ -22,6 +22,15 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y git openssh-client
 
+      # Configurar la clave SSH
+      - run:
+          name: Configurar la clave SSH
+          command: |
+            mkdir -p ~/.ssh
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Usar la variable de entorno configurada
+            chmod 600 ~/.ssh/id_rsa  # Asegurarse de que la clave privada tenga los permisos adecuados
+            ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts  # Añadir la clave de GitHub al archivo known_hosts
+
       # Configurar Git para usar HTTPS con token de GitHub
       - run:
           name: Configurar Git para usar HTTPS con token de GitHub
