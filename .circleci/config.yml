@@ -19,16 +19,9 @@ jobs:
       - run:
           name: Configurar Git para usar HTTPS con token de GitHub
           command: |
-            # Asegurarse de que Git use HTTPS con el token de GitHub
             git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
             git config --global user.email "youremail@example.com"
             git config --global user.name "Your Name"
-
-      # Asegurarse de que no se intente usar SSH para Git
-      - run:
-          name: Deshabilitar el uso de SSH para Git
-          command: |
-            git config --global --unset url."git@github.com:".insteadOf
 
       - setup_remote_docker:
           docker_layer_caching: true
