@@ -15,31 +15,34 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Configuración de la clave SSH para GitHub
+      # Instalar herramientas adicionales si no están presentes
       - run:
-          name: Configurar clave SSH
+          name: Instalar herramientas adicionales
           command: |
+            sudo apt-get update
+            sudo apt-get install -y git openssh-client
             mkdir -p ~/.ssh
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Colocar la clave privada SSH
-            chmod 600 ~/.ssh/id_rsa
             ssh-keyscan github.com >> ~/.ssh/known_hosts  # Agregar la clave pública de GitHub
-            chmod 644 ~/.ssh/known_hosts
-            # Verificar si la clave SSH está configurada correctamente
+
+      # Configurar el archivo ssh config
+      - run:
+          name: Configurar archivo SSH
+          command: |
+            echo -e "Host github.com\n  User git\n  Hostname github.com\n  IdentityFile ~/.ssh/id_rsa\n  IdentitiesOnly yes" > ~/.ssh/config
+            chmod 600 ~/.ssh/config
+
+      # Cargar la clave privada SSH desde la variable de entorno SSH_PRIVATE_KEY
+      - run:
+          name: Cargar clave privada SSH
+          command: |
+            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+
+      # Verificar que el archivo ssh config y la clave privada están bien configurados
+      - run:
+          name: Verificar conexión SSH a GitHub
+          command: |
             ssh -T git@github.com
-
-      # Configurar Git para usar SSH en lugar de HTTPS
-      - run:
-          name: Configurar Git para usar SSH
-          command: |
-            git config --global user.email "ci-bot@example.com"
-            git config --global user.name "CircleCI Bot"
-            git config --global url."git@github.com:".insteadOf "https://github.com/"
-
-      # Clonar el repositorio usando SSH
-      - run:
-          name: Clonar repositorio de manifiestos
-          command: |
-            git clone git@github.com:IsaacAM50/calculadora-manifiestos-argo.git manifests
 
       - setup_remote_docker:
           docker_layer_caching: true
