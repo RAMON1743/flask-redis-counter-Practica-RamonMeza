@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: circleci/python:3.9  # Imagen de Python que ya incluye Git y SSH
+      - image: cimg/python:3.9  # Imagen base de Python
       - image: redis:7  # Imagen de Redis
         name: redis  # Nombre del contenedor de Redis
     environment:
@@ -15,29 +15,31 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
-      # Instalar Git y SSH manualmente si no están presentes
+      # Instalar Git y SSH si no están instalados
       - run:
           name: Instalar Git y SSH
           command: |
             sudo apt-get update
             sudo apt-get install -y git openssh-client
 
-      # Configurar la clave SSH
+      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
       - run:
-          name: Configurar la clave SSH
+          name: Crear .ssh correctamente
           command: |
-            mkdir -p ~/.ssh
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa  # Usar la variable de entorno configurada
-            chmod 600 ~/.ssh/id_rsa  # Asegurarse de que la clave privada tenga los permisos adecuados
-            ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts  # Añadir la clave de GitHub al archivo known_hosts
+            # Crear el directorio ~/.ssh con los permisos adecuados
+            mkdir -p /home/circleci/.ssh
+            chmod 700 /home/circleci/.ssh
 
-      # Configurar Git para usar HTTPS con token de GitHub
-      - run:
-          name: Configurar Git para usar HTTPS con token de GitHub
-          command: |
-            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
-            git config --global user.email "youremail@example.com"
-            git config --global user.name "Your Name"
+            # Colocar la clave privada SSH
+            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
+            chmod 600 /home/circleci/.ssh/id_rsa
+
+            # Agregar la clave conocida de GitHub
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
+            chmod 644 /home/circleci/.ssh/known_hosts
+
+            # Verificar si el directorio .ssh y la clave están bien configurados
+            ls -al /home/circleci/.ssh
 
       - setup_remote_docker:
           docker_layer_caching: true
@@ -81,7 +83,7 @@ jobs:
 
   push_docker:
     docker:
-      - image: circleci/python:3.9  # Usar imagen de Python con Git y SSH preinstalados
+      - image: cimg/python:3.9
     steps:
       - checkout
       - setup_remote_docker:
@@ -122,7 +124,7 @@ jobs:
 
   vulnerability_scan:
     docker:
-      - image: circleci/python:3.9  # Usar imagen de Python con Git y SSH preinstalados
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
