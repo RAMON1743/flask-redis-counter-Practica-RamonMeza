@@ -2,10 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: flask-redis-counter
+  namespace: default
   labels:
     app: flask-redis-counter
 spec:
-  replicas: 2
+  replicas: 2  # 📌 Número de pods a ejecutar
   selector:
     matchLabels:
       app: flask-redis-counter
@@ -16,6 +17,11 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: tuusuario/flask-redis-counter-RamonMeza-Practica:latest
+        image: ramon1743/flask-redis-counter-practica-ramonmeza:latest
         ports:
         - containerPort: 5000
+        envFrom:
+        - configMapRef:
+            name: flask-redis-config  # 📌 Cargar ConfigMap
+        - secretRef:
+            name: flask-redis-secret  # 📌 Cargar Secret
