@@ -8,63 +8,48 @@ jobs:
     docker:
       - image: cimg/python:3.9
       - image: redis:7
-        name: redis  # 📌 Asignar un alias para garantizar que Flask lo encuentre
+        name: redis
     steps:
       - checkout
       - setup_remote_docker:
-          docker_layer_caching: true  # 📌 Habilitar Docker en CircleCI
+          docker_layer_caching: true
+
       - run:
           name: Convertir DOCKERHUB_REPO a minúsculas
           command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
+
       - run:
-          name: Instalar redis-tools para verificar Redis
-          command: sudo apt-get update && sudo apt-get install -y redis-tools netcat
-      - run:
-          name: Verificar si Redis está en ejecución
-          command: |
-            sleep 5  # Dar tiempo a que Redis arranque
-            echo "Verificando contenedores en ejecución:"
-            docker ps -a  # Verificar si Redis está corriendo en Docker
-            echo "Verificando procesos de Redis:"
-            ps aux | grep redis  # Verificar si hay procesos de Redis
-            echo "Verificando puertos abiertos en el sistema:"
-            netstat -tln  # Verificar si Redis está escuchando en el puerto 6379
-      - run:
-          name: Configurar Redis en Flask
-          command: echo "export REDIS_HOST=redis" >> $BASH_ENV && echo "export REDIS_PORT=6379" >> $BASH_ENV  # 📌 Agregar variables de entorno
-      - run:
-          name: Esperar a que Redis esté listo
-          command: |
-            for i in {1..10}; do
-              nc -z redis 6379 && echo "Redis está listo" && exit 0
-              echo "Esperando a Redis..."
-              sleep 3
-            done
-            echo "Redis no respondió a tiempo" && exit 1
-      - run:
-          name: Verificar conexión a Redis antes de ejecutar Flask
-          command: |
-            echo "Probando conexión con Redis..."
-            ping -c 3 redis || echo "No se pudo hacer ping a Redis"
-            nc -zv redis 6379 || echo "No se pudo conectar al puerto 6379"
-      - run:
-          name: Configurar PYTHONPATH
-          command: echo "export PYTHONPATH=$PYTHONPATH:$(pwd)" >> $BASH_ENV
+          name: Configurar SECRET_KEY en entorno
+          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
+
       - run:
           name: Instalar dependencias
           command: pip install --no-cache-dir -r requirements.txt
+
       - run:
           name: Ejecutar pruebas
-          command: pytest --cov=app --cov-report=xml
+          command: pytest --cov=app --cov-report=xml --junitxml=test-results/results.xml
+
       - run:
           name: Análisis estático de código con pylint
-          command: pylint --disable=C0303 app  # 📌 Desactivar trailing-whitespace en Pylint
+          command: pylint --disable=C0303 app
+
       - run:
           name: Linting con flake8
           command: flake8 app
+
       - run:
           name: Construir imagen Docker
           command: docker build -t $DOCKERHUB_REPO:latest .
+
+      # Guardar artefactos de tests
+      - store_test_results:
+          path: test-results
+      
+      # Guardar artefactos adicionales
+      - store_artifacts:
+          path: test-results
+          destination: test-reports
 
   push_docker:
     docker:
@@ -91,6 +76,22 @@ jobs:
             docker push $DOCKERHUB_REPO:latest
             docker push $DOCKERHUB_REPO:${CIRCLE_SHA1}
 
+  deploy_to_k8s:
+    docker:
+      - image: bitnami/kubectl:latest
+    steps:
+      - checkout
+      - run:
+          name: Configurar acceso a Kubernetes
+          command: |
+            echo "$KUBECONFIG_CONTENT" | base64 --decode > /root/.kube/config
+      - run:
+          name: Aplicar cambios en Kubernetes con ArgoCD
+          command: |
+            argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_PASSWORD --insecure
+            argocd app sync flask-redis-app
+            argocd app wait flask-redis-app --health
+
   vulnerability_scan:
     docker:
       - image: cimg/python:3.9
@@ -106,7 +107,7 @@ jobs:
             export PATH="$HOME/.npm-global/bin:$PATH"
             echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> $BASH_ENV
             npm install -g snyk
-            snyk --version  # Verificar que Snyk está instalado correctamente
+            snyk --version
       - run:
           name: Instalar dependencias del proyecto antes de ejecutar Snyk
           command: pip install --no-cache-dir -r requirements.txt
@@ -119,7 +120,7 @@ jobs:
 
 workflows:
   version: 2
-  build_test_and_push:
+  build_test_and_deploy:
     jobs:
       - build
       - vulnerability_scan:
@@ -129,6 +130,14 @@ workflows:
           requires:
             - build
             - vulnerability_scan
+          filters:
+            branches:
+              only:
+                - master
+                - main
+      - deploy_to_k8s:
+          requires:
+            - push_docker
           filters:
             branches:
               only:
