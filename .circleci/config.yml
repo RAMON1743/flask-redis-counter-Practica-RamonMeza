@@ -10,10 +10,10 @@ jobs:
       - image: redis:7  # Imagen de Redis
         name: redis  # Nombre del contenedor de Redis
     environment:
-      REDIS_HOST: "redis"  # Nombre del contenedor de Redis
-      REDIS_PORT: "6379"   # Puerto de Redis
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
     steps:
-      - checkout  # Revisa el código fuente
+      - checkout
 
       # Verificar si Git y SSH están instalados antes de instalar
       - run:
@@ -26,7 +26,7 @@ jobs:
               sudo apt-get update && sudo apt-get install -y openssh-client
             fi
 
-      # Agregar clave SSH desde CircleCI en lugar de configurarla manualmente
+      # Agregar clave SSH desde CircleCI
       - add_ssh_keys:
           fingerprints:
             - "FINGERPRINT_DE_TU_LLAVE_SSH"
@@ -68,7 +68,6 @@ jobs:
       - store_test_results:
           path: test-results
           
-      # Guardar artefactos adicionales
       - store_artifacts:
           path: test-results
           destination: test-reports
@@ -118,7 +117,7 @@ jobs:
 
   vulnerability_scan:
     docker:
-      - image: snyk/snyk-cli:1.1296.0  # Usar una versión específica
+      - image: snyk/snyk-cli:1.1296.0  # Usa una versión específica
     steps:
       - checkout
       - run:
@@ -127,22 +126,17 @@ jobs:
       - run:
           name: Ejecutar análisis de vulnerabilidades
           command: snyk test
-    # Si la imagen sigue fallando, instalar Snyk manualmente en Python
-    when: on_fail
-    steps:
       - run:
-          name: Instalar Node.js y Snyk CLI manualmente
+          name: Verificar si Snyk falló y probar instalación manual
           command: |
-            sudo apt update
-            sudo apt install -y nodejs npm
-            npm install -g snyk
-            snyk --version
-      - run:
-          name: Autenticar con Snyk
-          command: snyk auth $SNYK_TOKEN
-      - run:
-          name: Ejecutar análisis de vulnerabilidades
-          command: snyk test
+            if [ $? -ne 0 ]; then
+              echo "Fallo la imagen de Snyk, instalando manualmente..."
+              sudo apt update
+              sudo apt install -y nodejs npm
+              npm install -g snyk
+              snyk auth $SNYK_TOKEN
+              snyk test
+            fi
 
 workflows:
   version: 2
