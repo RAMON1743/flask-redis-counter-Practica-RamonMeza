@@ -118,9 +118,25 @@ jobs:
 
   vulnerability_scan:
     docker:
-      - image: snyk/snyk-cli:latest  # Usa la imagen oficial de Snyk para evitar instalación manual
+      - image: snyk/snyk-cli:1.1296.0  # Usar una versión específica
     steps:
       - checkout
+      - run:
+          name: Autenticar con Snyk
+          command: snyk auth $SNYK_TOKEN
+      - run:
+          name: Ejecutar análisis de vulnerabilidades
+          command: snyk test
+    # Si la imagen sigue fallando, instalar Snyk manualmente en Python
+    when: on_fail
+    steps:
+      - run:
+          name: Instalar Node.js y Snyk CLI manualmente
+          command: |
+            sudo apt update
+            sudo apt install -y nodejs npm
+            npm install -g snyk
+            snyk --version
       - run:
           name: Autenticar con Snyk
           command: snyk auth $SNYK_TOKEN
