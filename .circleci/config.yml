@@ -135,6 +135,7 @@ jobs:
       - run:
           name: Configurar acceso a Kubernetes
           command: |
+            mkdir -p /home/circleci/.kube  # Asegura que el directorio .kube existe
             echo "$KUBECONFIG_CONTENT" | base64 --decode > /root/.kube/config
       - run:
           name: Aplicar cambios en Kubernetes con ArgoCD
