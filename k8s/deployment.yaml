@@ -6,7 +6,7 @@ metadata:
   labels:
     app: flask-redis-counter
 spec:
-  replicas: 2  
+  replicas: 2
   selector:
     matchLabels:
       app: flask-redis-counter
@@ -16,12 +16,12 @@ spec:
         app: flask-redis-counter
     spec:
       containers:
-      - name: flask-app
-        image: ramon1743/flask-redis-counter-practica-ramonmeza:latest
-        ports:
-        - containerPort: 5000
-        envFrom:
-        - configMapRef:
-            name: flask-redis-config  
-        - secretRef:
-            name: flask-redis-secret  
+        - name: flask-app
+          image: ramon1743/flask-redis-counter-practica-ramonmeza:latest
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: flask-redis-config
+            - secretRef:
+                name: flask-redis-secret
