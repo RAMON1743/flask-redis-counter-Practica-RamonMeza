@@ -8,31 +8,22 @@ jobs:
     docker:
       - image: cimg/python:3.9  # Imagen base de Python
       - image: redis:7  # Imagen de Redis
-        name: redis
+        name: redis  # Nombre del contenedor de Redis
     environment:
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
     steps:
       - checkout
       - run:
-          name: Verificar e instalar Git y SSH si es necesario
+          name: Instalar Git y SSH
           command: |
-            if ! command -v git &> /dev/null; then
-              sudo apt-get update && sudo apt-get install -y git
-            fi
-            if ! command -v ssh &> /dev/null; then
-              sudo apt-get update && sudo apt-get install -y openssh-client
-            fi
-      - add_ssh_keys:
-          fingerprints:
-            - "FINGERPRINT_DE_TU_LLAVE_SSH"
+            sudo apt-get update
+            sudo apt-get install -y git openssh-client
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
           name: Convertir DOCKERHUB_REPO a minúsculas
-          command: |
-            export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')
-            echo "export DOCKERHUB_REPO=$DOCKERHUB_REPO" >> $BASH_ENV
+          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
       - run:
           name: Configurar SECRET_KEY en entorno
           command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
@@ -66,9 +57,7 @@ jobs:
           docker_layer_caching: true
       - run:
           name: Convertir DOCKERHUB_REPO a minúsculas
-          command: |
-            export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')
-            echo "export DOCKERHUB_REPO=$DOCKERHUB_REPO" >> $BASH_ENV
+          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
       - run:
           name: Iniciar sesión en Docker Hub
           command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
@@ -102,21 +91,31 @@ jobs:
 
   vulnerability_scan:
     docker:
-      - image: cimg/python:3.9  # Imagen base en la que instalaremos Snyk manualmente
+      - image: cimg/python:3.9
     steps:
       - checkout
       - run:
-          name: Instalar Node.js y Snyk CLI
+          name: Configurar directorio de instalación de npm
+          command: |
+            mkdir -p "$HOME/.npm-global"
+            npm config set prefix "$HOME/.npm-global"
+            export PATH="$HOME/.npm-global/bin:$PATH"
+            echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> $BASH_ENV
+      - run:
+          name: Instalar Node.js y Snyk CLI sin permisos elevados
           command: |
             sudo apt update
             sudo apt install -y nodejs npm
-            npm install -g snyk --unsafe-perm
+            npm install -g snyk
             snyk --version
+      - run:
+          name: Instalar dependencias del proyecto antes de ejecutar Snyk
+          command: pip install --no-cache-dir -r requirements.txt
       - run:
           name: Autenticar con Snyk
           command: snyk auth $SNYK_TOKEN
       - run:
-          name: Ejecutar análisis de vulnerabilidades con Snyk
+          name: Ejecutar análisis de vulnerabilidades
           command: snyk test
 
 workflows:
