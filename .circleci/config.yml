@@ -15,57 +15,68 @@ jobs:
     steps:
       - checkout  # Revisa el código fuente
 
+      # Instalar Git y SSH si no están instalados
       - run:
-          name: Cambiar a usuario circleci
+          name: Instalar Git y SSH
           command: |
-            sudo chown -R circleci:circleci /home/circleci
-            sudo chmod 755 /home/circleci
-            sudo su - circleci -c "whoami"
+            sudo apt-get update
+            sudo apt-get install -y git openssh-client
 
+      # Cambiar permisos y directorio de .ssh para asegurar que se crea en el home del usuario
       - run:
-          name: Configurar SSH correctamente
+          name: Crear .ssh correctamente
           command: |
-            sudo su - circleci -c "
-              mkdir -p /home/circleci/.ssh
-              chmod 700 /home/circleci/.ssh
-              echo '$SSH_PRIVATE_KEY' > /home/circleci/.ssh/id_rsa
-              chmod 600 /home/circleci/.ssh/id_rsa
-              ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
-              chmod 644 /home/circleci/.ssh/known_hosts
-            "
+            # Crear el directorio ~/.ssh con los permisos adecuados
+            mkdir -p /home/circleci/.ssh
+            chmod 700 /home/circleci/.ssh
 
-      - run:
-          name: Configurar Git para usar SSH
-          command: |
-            sudo su - circleci -c "
-              git config --global url.'git@github.com:'.insteadOf 'https://github.com/'
-            "
+            # Colocar la clave privada SSH
+            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
+            chmod 600 /home/circleci/.ssh/id_rsa
+
+            # Agregar la clave conocida de GitHub
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
+            chmod 644 /home/circleci/.ssh/known_hosts
+
+            # Verificar si el directorio .ssh y la clave están bien configurados
+            ls -al /home/circleci/.ssh
 
       - setup_remote_docker:
           docker_layer_caching: true
 
       - run:
+          name: Convertir DOCKERHUB_REPO a minúsculas
+          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
+
+      - run:
+          name: Configurar SECRET_KEY en entorno
+          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
+
+      - run:
           name: Instalar dependencias
-          command: sudo su - circleci -c "pip install --no-cache-dir -r requirements.txt"
+          command: pip install --no-cache-dir -r requirements.txt
 
       - run:
           name: Ejecutar pruebas
-          command: sudo su - circleci -c "pytest --cov=app --cov-report=xml --junitxml=test-results/results.xml"
+          command: pytest --cov=app --cov-report=xml --junitxml=test-results/results.xml
 
       - run:
           name: Análisis estático de código con pylint
-          command: sudo su - circleci -c "pylint --disable=C0303 app"
+          command: pylint --disable=C0303 app
 
       - run:
           name: Linting con flake8
-          command: sudo su - circleci -c "flake8 app"
+          command: flake8 app
 
       - run:
           name: Construir imagen Docker
-          command: sudo su - circleci -c "docker build -t $DOCKERHUB_REPO:latest ."
+          command: docker build -t $DOCKERHUB_REPO:latest .
 
+      # Guardar artefactos de tests
       - store_test_results:
           path: test-results
+          
+      # Guardar artefactos adicionales
       - store_artifacts:
           path: test-results
           destination: test-reports
@@ -78,13 +89,20 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
+          name: Convertir DOCKERHUB_REPO a minúsculas
+          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
+      - run:
           name: Iniciar sesión en Docker Hub
           command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - run:
-          name: Construir y subir imagen Docker
+          name: Construir imagen Docker
+          command: docker build -t $DOCKERHUB_REPO:latest .
+      - run:
+          name: Etiquetar imagen con el commit SHA
+          command: docker tag $DOCKERHUB_REPO:latest $DOCKERHUB_REPO:${CIRCLE_SHA1}
+      - run:
+          name: Subir imagen a Docker Hub
           command: |
-            docker build -t $DOCKERHUB_REPO:latest .
-            docker tag $DOCKERHUB_REPO:latest $DOCKERHUB_REPO:${CIRCLE_SHA1}
             docker push $DOCKERHUB_REPO:latest
             docker push $DOCKERHUB_REPO:${CIRCLE_SHA1}
 
@@ -92,13 +110,11 @@ jobs:
     docker:
       - image: bitnami/kubectl:latest
     steps:
+      - checkout
       - run:
           name: Configurar acceso a Kubernetes
           command: |
-            export HOME=/home/circleci
-            mkdir -p $HOME/.kube
-            echo "$KUBECONFIG_CONTENT" | base64 --decode > $HOME/.kube/config
-            chmod 600 $HOME/.kube/config
+            echo "$KUBECONFIG_CONTENT" | base64 --decode > /root/.kube/config
       - run:
           name: Aplicar cambios en Kubernetes con ArgoCD
           command: |
@@ -116,11 +132,15 @@ jobs:
           command: |
             sudo apt update
             sudo apt install -y nodejs npm
+            mkdir -p "$HOME/.npm-global/bin"
+            npm config set prefix "$HOME/.npm-global"
+            export PATH="$HOME/.npm-global/bin:$PATH"
+            echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> $BASH_ENV
             npm install -g snyk
             snyk --version
       - run:
-          name: Instalar dependencias antes de ejecutar Snyk
-          command: sudo su - circleci -c "pip install --no-cache-dir -r requirements.txt"
+          name: Instalar dependencias del proyecto antes de ejecutar Snyk
+          command: pip install --no-cache-dir -r requirements.txt
       - run:
           name: Autenticar con Snyk
           command: snyk auth $SNYK_TOKEN
