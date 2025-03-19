@@ -104,13 +104,7 @@ jobs:
           command: |
             mkdir -p /home/circleci/.kube
             echo "$KUBECONFIG_CONTENT" | base64 --decode > /home/circleci/.kube/config
-      - run:
-          name: Aplicar cambios en Kubernetes con ArgoCD
-          command: |
-            argocd login 127.0.0.1:8080 --username admin --password kdQqSG1EA3S5ChAt --insecure
-            argocd app sync flask-redis-app
-            argocd app wait flask-redis-app --health
-
+      
   vulnerability_scan:
     docker:
       - image: circleci/python:3.9
