@@ -130,7 +130,7 @@ jobs:
       - run:
           name: Clonar repositorio de manifiestos
           command: |
-            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git k8s
+            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git k8s_new
 
       - run:
           name: Configurar acceso a Kubernetes
