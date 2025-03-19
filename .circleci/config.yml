@@ -6,9 +6,9 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/python:3.9  # Imagen base de Python
-      - image: redis:7  # Imagen de Redis
-        name: redis  # Nombre del contenedor de Redis
+      - image: cimg/python:3.9
+      - image: redis:7
+        name: redis
     environment:
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
@@ -20,7 +20,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y git openssh-client
       - run:
-          name: Crear .ssh correctamente
+          name: Configurar SSH
           command: |
             mkdir -p /home/circleci/.ssh
             chmod 700 /home/circleci/.ssh
@@ -31,23 +31,16 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-          name: Convertir DOCKERHUB_REPO a minúsculas
-          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
-      - run:
-          name: Configurar SECRET_KEY en entorno
-          command: echo "export SECRET_KEY=$SECRET_KEY" >> $BASH_ENV
-      - run:
           name: Instalar dependencias
           command: pip install --no-cache-dir -r requirements.txt
       - run:
           name: Ejecutar pruebas
           command: pytest --cov=app --cov-report=xml --junitxml=test-results/results.xml
       - run:
-          name: Análisis estático de código con pylint
-          command: pylint --disable=C0303 app
-      - run:
-          name: Linting con flake8
-          command: flake8 app
+          name: Análisis estático
+          command: |
+            pylint --disable=C0303 app
+            flake8 app
       - run:
           name: Construir imagen Docker
           command: docker build -t $DOCKERHUB_REPO:latest .
@@ -65,20 +58,13 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-          name: Convertir DOCKERHUB_REPO a minúsculas
-          command: echo "export DOCKERHUB_REPO=$(echo $DOCKERHUB_REPO | tr '[:upper:]' '[:lower:]')" >> $BASH_ENV
-      - run:
           name: Iniciar sesión en Docker Hub
           command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - run:
-          name: Construir imagen Docker
-          command: docker build -t $DOCKERHUB_REPO:latest .
-      - run:
-          name: Etiquetar imagen con el commit SHA
-          command: docker tag $DOCKERHUB_REPO:latest $DOCKERHUB_REPO:${CIRCLE_SHA1}
-      - run:
-          name: Subir imagen a Docker Hub
+          name: Construir y subir imagen Docker
           command: |
+            docker build -t $DOCKERHUB_REPO:latest .
+            docker tag $DOCKERHUB_REPO:latest $DOCKERHUB_REPO:${CIRCLE_SHA1}
             docker push $DOCKERHUB_REPO:latest
             docker push $DOCKERHUB_REPO:${CIRCLE_SHA1}
 
@@ -89,7 +75,10 @@ jobs:
       - run:
           name: Configurar acceso a Kubernetes
           command: |
-            echo "$KUBECONFIG_CONTENT" | base64 --decode > /root/.kube/config
+            export HOME=/home/circleci
+            mkdir -p $HOME/.kube
+            echo "$KUBECONFIG_CONTENT" | base64 --decode > $HOME/.kube/config
+            chmod 600 $HOME/.kube/config
       - run:
           name: Aplicar cambios en Kubernetes con ArgoCD
           command: |
@@ -114,7 +103,7 @@ jobs:
             npm install -g snyk
             snyk --version
       - run:
-          name: Instalar dependencias del proyecto antes de ejecutar Snyk
+          name: Instalar dependencias antes de ejecutar Snyk
           command: pip install --no-cache-dir -r requirements.txt
       - run:
           name: Autenticar con Snyk
