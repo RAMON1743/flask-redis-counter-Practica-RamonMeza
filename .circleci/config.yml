@@ -107,7 +107,7 @@ jobs:
       - run:
           name: Aplicar cambios en Kubernetes con ArgoCD
           command: |
-            argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_PASSWORD --insecure
+            argocd login 127.0.0.1:8080 --username admin --password kdQqSG1EA3S5ChAt --insecure
             argocd app sync flask-redis-app
             argocd app wait flask-redis-app --health
 
