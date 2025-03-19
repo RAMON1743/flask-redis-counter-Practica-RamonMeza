@@ -130,13 +130,13 @@ jobs:
       - run:
           name: Clonar repositorio de manifiestos
           command: |
-            git clone https://$GITHUB_TOKEN@github.com/IsaacAM50/calculadora-manifiestos-argo.git manifests
+            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git k8s
 
       - run:
           name: Configurar acceso a Kubernetes
           command: |
             mkdir -p /home/circleci/.kube  # Asegura que el directorio .kube existe
-            echo "$KUBECONFIG_CONTENT" | base64 --decode > /root/.kube/config
+            echo "$KUBECONFIG_CONTENT" | base64 --decode > /home/circleci/.kube/config
       - run:
           name: Aplicar cambios en Kubernetes con ArgoCD
           command: |
