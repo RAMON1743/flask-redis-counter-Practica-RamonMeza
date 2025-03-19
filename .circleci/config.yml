@@ -110,7 +110,7 @@ jobs:
           command: |
             sudo apt update
             sudo apt install -y nodejs npm
-            npm install -g snyk
+            npm install -g snyk --unsafe-perm
             snyk --version
       - run:
           name: Autenticar con Snyk
