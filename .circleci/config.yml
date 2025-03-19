@@ -20,7 +20,7 @@ jobs:
           name: Instalar ArgoCD CLI
           command: |
             sudo curl -sSL https://github.com/argoproj/argo-cd/releases/download/v2.5.0/argocd-linux-amd64 -o /usr/local/bin/argocd
-            chmod +x /usr/local/bin/argocd
+            sudo chmod +x /usr/local/bin/argocd
 
       # Configurar Git para usar HTTPS con el token de GitHub
       - run:
