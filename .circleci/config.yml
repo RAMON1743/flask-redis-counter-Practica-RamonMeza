@@ -108,9 +108,30 @@ jobs:
 
   deploy_to_k8s:
     docker:
-      - image: bitnami/kubectl:latest
+      - image: cimg/python:3.9  # Cambié a una imagen que tiene Git y SSH preinstalados
     steps:
       - checkout
+      # Instalar herramientas necesarias
+      - run:
+          name: Instalar Git y SSH
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y git openssh-client
+
+      # Configurar Git para usar HTTPS con el token de GitHub
+      - run:
+          name: Configurar Git
+          command: |
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
+            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
+
+      # Clonar el repositorio usando HTTPS
+      - run:
+          name: Clonar repositorio de manifiestos
+          command: |
+            git clone https://$GITHUB_TOKEN@github.com/IsaacAM50/calculadora-manifiestos-argo.git manifests
+
       - run:
           name: Configurar acceso a Kubernetes
           command: |
