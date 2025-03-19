@@ -26,15 +26,20 @@ jobs:
       - run:
           name: Crear .ssh correctamente
           command: |
-            export HOME=/home/circleci
-            mkdir -p $HOME/.ssh
-            chmod 700 $HOME/.ssh
-            
-            echo "$SSH_PRIVATE_KEY" > $HOME/.ssh/id_rsa
-            chmod 600 $HOME/.ssh/id_rsa
-            
-            ssh-keyscan github.com >> $HOME/.ssh/known_hosts
-            chmod 644 $HOME/.ssh/known_hosts
+            # Crear el directorio ~/.ssh con los permisos adecuados
+            mkdir -p /home/circleci/.ssh
+            chmod 700 /home/circleci/.ssh
+
+            # Colocar la clave privada SSH
+            echo "$SSH_PRIVATE_KEY" > /home/circleci/.ssh/id_rsa
+            chmod 600 /home/circleci/.ssh/id_rsa
+
+            # Agregar la clave conocida de GitHub
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
+            chmod 644 /home/circleci/.ssh/known_hosts
+
+            # Verificar si el directorio .ssh y la clave están bien configurados
+            ls -al /home/circleci/.ssh
 
       - setup_remote_docker:
           docker_layer_caching: true
@@ -70,7 +75,7 @@ jobs:
       # Guardar artefactos de tests
       - store_test_results:
           path: test-results
-      
+          
       # Guardar artefactos adicionales
       - store_artifacts:
           path: test-results
@@ -105,14 +110,11 @@ jobs:
     docker:
       - image: bitnami/kubectl:latest
     steps:
+      - checkout
       - run:
           name: Configurar acceso a Kubernetes
           command: |
-            export HOME=/home/circleci
-            mkdir -p $HOME/.kube
-            echo "$KUBECONFIG_CONTENT" | base64 --decode > $HOME/.kube/config
-            chmod 600 $HOME/.kube/config
-
+            echo "$KUBECONFIG_CONTENT" | base64 --decode > /root/.kube/config
       - run:
           name: Aplicar cambios en Kubernetes con ArgoCD
           command: |
