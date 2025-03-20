@@ -15,6 +15,11 @@ spec:
       labels:
         app: flask-redis-counter
     spec:
+      automountServiceAccountToken: false  # 🔹 Evita la asignación automática de credenciales RBAC
+      volumes:
+        - name: flask-storage
+          persistentVolumeClaim:
+            claimName: flask-pvc  # 🔹 Uso del PVC para almacenamiento persistente
       containers:
         - name: flask-app
           image: ramon1743/flask-redis-counter-practica-ramonmeza:latest
@@ -25,3 +30,13 @@ spec:
                 name: flask-redis-config
             - secretRef:
                 name: flask-redis-secret
+          resources:
+            requests:
+              memory: "128Mi"  
+              cpu: "250m"       
+            limits:
+              memory: "256Mi"  
+              cpu: "500m"       
+          volumeMounts:
+            - mountPath: /app/storage
+              name: flask-storage  
