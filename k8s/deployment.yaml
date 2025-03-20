@@ -22,7 +22,7 @@ spec:
             claimName: flask-pvc  # 🔹 Uso del PVC para almacenamiento persistente
       containers:
         - name: flask-app
-          image: ramon1743/flask-redis-counter-practica-ramonmeza:latest
+          image: ramon1743/flask-redis-counter-practica-ramonmeza:v1.0.0
           ports:
             - containerPort: 5000
           envFrom:
