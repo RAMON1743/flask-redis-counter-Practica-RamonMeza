@@ -98,7 +98,23 @@ jobs:
       - run:
           name: Clonar repositorio de manifiestos
           command: |
-            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git k8s
+            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git k8s-manifests
+      - run:
+          name: Guardar manifiesto en el repositorio de despliegue
+          command: |
+            cd k8s-manifests
+            cp ../k8s/*.yaml .
+
+            # Configurar git
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CI/CD Bot"
+
+            # Agregar cambios y hacer commit
+            git add .
+            git commit -m "Actualiza manifiestos con nueva configuración automática [CI/CD]"
+
+            # Subir cambios al repositorio remoto
+            git push origin main
       - run:
           name: Configurar acceso a Kubernetes
           command: |
