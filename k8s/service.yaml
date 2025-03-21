@@ -3,11 +3,16 @@ kind: Service
 metadata:
   name: flask-redis-counter-service
   namespace: default
+  labels:
+    app.kubernetes.io/instance: flask-redis-app
+  annotations:
+    endpointslice.kubernetes.io/skip: "true" 
 spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 5000
+      protocol: TCP
+      nodePort: 32293
   selector:
     app: flask-redis-counter
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
-  type: NodePort  
