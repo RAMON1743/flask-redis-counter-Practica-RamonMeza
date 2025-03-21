@@ -15,11 +15,11 @@ spec:
       labels:
         app: flask-redis-counter
     spec:
-      automountServiceAccountToken: false  # 🔹 Evita la asignación automática de credenciales RBAC
+      automountServiceAccountToken: false  
       volumes:
         - name: flask-storage
           persistentVolumeClaim:
-            claimName: flask-pvc  # 🔹 Uso del PVC para almacenamiento persistente
+            claimName: flask-pvc  
       containers:
         - name: flask-app
           image: ramon1743/flask-redis-counter-practica-ramonmeza:latest
@@ -35,11 +35,11 @@ spec:
             requests:
               memory: "128Mi"  
               cpu: "250m"       
-              ephemeral-storage: "500Mi"  # 🔹 Solicita 500MB de almacenamiento efímero
+              ephemeral-storage: "500Mi"  
             limits:
               memory: "256Mi"  
               cpu: "500m"       
-              ephemeral-storage: "1Gi"  # 🔹 Límite de 1GB de almacenamiento efímero
+              ephemeral-storage: "1Gi"  
           volumeMounts:
             - mountPath: /app/storage
               name: flask-storage  
