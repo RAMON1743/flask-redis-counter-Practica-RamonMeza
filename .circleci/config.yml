@@ -23,8 +23,8 @@ jobs:
           name: Configurar Git
           command: |
             git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
-            git config --global user.email "ci-bot@example.com"
-            git config --global user.name "CircleCI Bot"
+            git config --global user.email "youremail@example.com"
+            git config --global user.name "Your Name"
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
@@ -94,33 +94,17 @@ jobs:
           command: |
             git config --global user.email "ci-bot@example.com"
             git config --global user.name "CircleCI Bot"
-            git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
+            git config --global url."https://$GITHUB_TOKEN_MANIFESTO@github.com".insteadOf "git@github.com:"
       - run:
-          name: Clonar repositorio de manifiestos en la nueva ubicación
+          name: Clonar repositorio de manifiestos
           command: |
-            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git Manifiesto
-      - run:
-          name: Copiar archivos de manifiesto y hacer push al repositorio de despliegue
-          command: |
-            cd Manifiesto
-            cp ../k8s/*.yaml .
-            
-            # Configurar Git
-            git config --global user.email "ci-bot@example.com"
-            git config --global user.name "CI/CD Bot"
-
-            # Agregar cambios y hacer commit
-            git add .
-            git commit -m "Actualiza manifiestos de Kubernetes automáticamente [CI/CD]"
-
-            # Subir cambios al repositorio de manifiestos
-            git push origin main
+            git clone https://$GITHUB_TOKEN_MANIFESTO@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git Manifiesto
       - run:
           name: Configurar acceso a Kubernetes
           command: |
             mkdir -p /home/circleci/.kube
             echo "$KUBECONFIG_CONTENT" | base64 --decode > /home/circleci/.kube/config
-      
+
   vulnerability_scan:
     docker:
       - image: circleci/python:3.9
