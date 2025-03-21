@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/instance: flask-redis-app
   annotations:
     endpointslice.kubernetes.io/skip: "true" 
+    link.argocd.argoproj.io/external-link: "http://127.0.0.1:5000/"
 spec:
   type: NodePort
   ports:
