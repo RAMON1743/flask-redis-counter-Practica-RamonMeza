@@ -5,8 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/refresh: "true"
-    argocd.argoproj.io/external-url: "http://127.0.0.1:5000/"
-spec:
+    spec:
   project: default
   source:
     repoURL: 'https://github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git'
