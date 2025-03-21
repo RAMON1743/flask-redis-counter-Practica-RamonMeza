@@ -3,21 +3,19 @@ kind: Application
 metadata:
   name: flask-redis-app
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/refresh: "true"
-    spec:
+spec:
   project: default
   source:
     repoURL: 'https://github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza.git'
     targetRevision: HEAD
     path: k8s
   destination:
-    server: https://kubernetes.default.svc
+    server: 'https://kubernetes.default.svc'
     namespace: default
   syncPolicy:
     automated:
-      selfHeal: true
       prune: true
+      selfHeal: true
   info:
-    - name: "Application URL"
-      value: "http://127.0.0.1:5000/"
+    - name: Application URL
+      value: 'http://127.0.0.1:5000/'
