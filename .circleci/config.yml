@@ -98,7 +98,7 @@ jobs:
       - run:
           name: Clonar repositorio de manifiestos
           command: |
-            git clone https://$GITHUB_TOKEN_MANIFESTO@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git k8s
+            git clone https://$GITHUB_TOKEN_MANIFESTO@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git
       - run:
           name: Copiar manifiestos y hacer push al repo de infraestructura
           command: |
