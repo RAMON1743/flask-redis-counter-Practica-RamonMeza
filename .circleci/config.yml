@@ -23,8 +23,8 @@ jobs:
           name: Configurar Git
           command: |
             git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
-            git config --global user.email "youremail@example.com"
-            git config --global user.name "Your Name"
+            git config --global user.email "ci-bot@example.com"
+            git config --global user.name "CircleCI Bot"
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
@@ -96,24 +96,24 @@ jobs:
             git config --global user.name "CircleCI Bot"
             git config --global url."https://$GITHUB_TOKEN@github.com".insteadOf "git@github.com:"
       - run:
-          name: Clonar repositorio de manifiestos
+          name: Clonar repositorio de manifiestos en la nueva ubicación
           command: |
-            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git k8s-manifests
+            git clone https://$GITHUB_TOKEN@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git Manifiesto
       - run:
-          name: Guardar manifiesto en el repositorio de despliegue
+          name: Copiar archivos de manifiesto y hacer push al repositorio de despliegue
           command: |
-            cd k8s-manifests
+            cd Manifiesto
             cp ../k8s/*.yaml .
-
-            # Configurar git
+            
+            # Configurar Git
             git config --global user.email "ci-bot@example.com"
             git config --global user.name "CI/CD Bot"
 
             # Agregar cambios y hacer commit
             git add .
-            git commit -m "Actualiza manifiestos con nueva configuración automática [CI/CD]"
+            git commit -m "Actualiza manifiestos de Kubernetes automáticamente [CI/CD]"
 
-            # Subir cambios al repositorio remoto
+            # Subir cambios al repositorio de manifiestos
             git push origin main
       - run:
           name: Configurar acceso a Kubernetes
