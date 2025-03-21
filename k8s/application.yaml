@@ -3,6 +3,9 @@ kind: Application
 metadata:
   name: flask-redis-app
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/refresh: "true"
+    argocd.argoproj.io/external-url: "http://127.0.0.1:5000/"
 spec:
   project: default
   source:
