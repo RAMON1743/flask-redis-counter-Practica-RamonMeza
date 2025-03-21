@@ -98,7 +98,15 @@ jobs:
       - run:
           name: Clonar repositorio de manifiestos
           command: |
-            git clone https://$GITHUB_TOKEN_MANIFESTO@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git Manifiesto
+            git clone https://$GITHUB_TOKEN_MANIFESTO@github.com/RAMON1743/flask-redis-counter-Practica-RamonMeza-Manifiesto.git manifiestos
+      - run:
+          name: Copiar manifiestos al repositorio de infraestructura
+          command: |
+            cp -r k8s/* manifiestos/
+            cd manifiestos
+            git add .
+            git commit -m "Actualización automática de manifiestos desde CI/CD" || echo "Sin cambios para commitear"
+            git push origin main
       - run:
           name: Configurar acceso a Kubernetes
           command: |
