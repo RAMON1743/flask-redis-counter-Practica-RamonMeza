@@ -7,3 +7,4 @@ pylint==2.15.0
 setuptools==70.0.0  # Corregir la sintaxis
 astroid==2.12.4  # Corregir la sintaxis
 Flask==2.2.5
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
