@@ -36,7 +36,7 @@ FLASK-REDIS-COUNTER-PRACTICA-RAMONMEZA/
 ├── requirements.txt             # Dependencias de Python
 ├── README.md                    # Documentación del proyecto
 ├── .gitignore                   # Archivos ignorados por Git
-└── venv/                        # Entorno virtual de Python (opcional)
+└── venv/                        # Entorno virtual de Python 
 
 ```
 
