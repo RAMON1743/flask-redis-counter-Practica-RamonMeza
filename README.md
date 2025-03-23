@@ -40,7 +40,7 @@ FLASK-REDIS-COUNTER-PRACTICA-RAMONMEZA/
 
 ```
 
-# Proyecto Flask-Redis-Counter
+## Proyecto Flask-Redis-Counter
 
 Este repositorio contiene los manifiestos de Kubernetes y la configuración necesaria para desplegar una aplicación Flask que interactúa con Redis. La aplicación se usa como un contador, y todos los componentes están desplegados de manera eficiente utilizando Kubernetes.
 
