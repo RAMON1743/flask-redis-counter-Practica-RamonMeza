@@ -6,7 +6,7 @@ metadata:
   labels:
     app: flask-redis-counter
 spec:
-  replicas: 1
+  replicas: 4
   selector:
     matchLabels:
       app: flask-redis-counter
